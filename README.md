@@ -1,3 +1,3 @@
 # StrayGame
-A game following a stray dog trying to reach an animal shelter.   
-This game is a part of a University assignment to spread avareness about strays.
+A game following the day to day life of a stary dog.   
+This game was developed as part of a university assignment.
