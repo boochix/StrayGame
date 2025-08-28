@@ -205,14 +205,20 @@ style input:
 ## https://www.renpy.org/doc/html/screen_special.html#choice
 
 screen choice(items):
-    style_prefix "choice"
-
+    default keymap = { "a": 0, "b": 1, "c": 2, "d": 3 }
     hbox:
         xalign 0.5
         yalign 0.9
         spacing gui.choice_spacing
-        for i in items:
-            textbutton i.caption action i.action
+        for i, item in enumerate(items):
+            button:
+                style "choice_button"
+                action item.action
+                text item.caption style "choice_button_text"
+    # Add key bindings for a/b/c/d
+    for k, idx in keymap.items():
+        if idx < len(items):
+            key k action items[idx].action
 
 
 style choice_vbox is vbox

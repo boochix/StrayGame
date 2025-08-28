@@ -2,6 +2,7 @@
 # Ren'Py script for "Stray's Journey" interactive story
 
 default lives = 4
+default hearts_flashing = False
 
 define d = Character("Doggo", color="#c8ffc8")
 
@@ -120,13 +121,17 @@ label start:
     scene bg start
     with fade
 
+    $ hearts_flashing = True
     show dogidle at doggointro
+    show heart4flash at heartpos
+    $ send_to_arduino("start", lives, hearts_flashing)
     "🐾 Welcome to Stray\’s Journey!" 
     "You will follow a stray dog through struggles it faces in its everyday life."
-    show heart4flash at heartpos
     "You start with 4 lives."
+    $ hearts_flashing = False
     hide heart4flash
     show heart 4 at heartpos
+    $ send_to_arduino("start", lives, hearts_flashing)
     "Each wrong choice costs a life. Make safe choices to help the dog survive!"
     "Press START to begin."
 
@@ -139,7 +144,9 @@ label scenario1:
     scene bg road
     with fade
 
+    $ hearts_flashing = False
     show heart 4 at heartpos
+    $ send_to_arduino("road", lives, hearts_flashing)
     show dogattack at doggoroad
     pause 1.8
     hide dogattack
@@ -155,16 +162,28 @@ label scenario1:
             hide dogidle
             show doghurt at doggoroad
             hide heart 4
+            $ hearts_flashing = True
             show heart3flash at heartpos
+            $ send_to_arduino("road", lives, hearts_flashing)
             "The dog tries running across the street. A scooter hits it! 😔"
+            $ hearts_flashing = False
+            hide heart3flash
+            show heart 3 at heartpos
+            $ send_to_arduino("road", lives, hearts_flashing)
 
         "Wait near the footpath":
             $ lives -= 1
             hide dogidle
             show doghurt at doggoroad
             hide heart 4
+            $ hearts_flashing = True
             show heart3flash at heartpos
+            $ send_to_arduino("road", lives, hearts_flashing)
             "The dog waits too long. A car brushes it. 😔"
+            $ hearts_flashing = False
+            hide heart3flash
+            show heart 3 at heartpos
+            $ send_to_arduino("road", lives, hearts_flashing)
 
         "Cross with people":
             "The dog safely crosses with people!"
@@ -181,7 +200,9 @@ label scenario2:
     scene bg market
     with fade
 
+    $ hearts_flashing = False
     show expression "heart %d" % lives at heartpos
+    $ send_to_arduino("market", lives, hearts_flashing)
     show dogattack at doggomarket
     pause 1.8
     hide dogattack
@@ -195,16 +216,28 @@ label scenario2:
             hide dogidle
             show doghurt at doggomarket
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("market", lives, hearts_flashing)
             "The vendor hits the dog with a stick! 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("market", lives, hearts_flashing)
             
         "Dig through the trash":
             $ lives -= 1
             hide dogidle
             show doghurt at doggomarket
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("market", lives, hearts_flashing)
             "The dog accidentally eats plastic from trash. 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("market", lives, hearts_flashing)
 
         "Puppy eyes at the tea stall owner":
             "A kind tea-stall owner gives bread!"
@@ -222,7 +255,9 @@ label scenario3:
     scene bg sunny
     with fade
 
+    $ hearts_flashing = False
     show expression "heart %d" % lives at heartpos
+    $ send_to_arduino("sunny", lives, hearts_flashing)
     show dogattack at doggosunny
     pause 1.8
     hide dogattack
@@ -237,16 +272,28 @@ label scenario3:
             hide dogidle
             show doghurt at doggosunny
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("sunny", lives, hearts_flashing)
             "The engine starts. Ouch that burns! 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("sunny", lives, hearts_flashing)
 
         "Wander into a construction site":
             $ lives -= 1
             hide dogidle
             show doghurt at doggosunny
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("sunny", lives, hearts_flashing)
             "Accidentally step on nails! 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("sunny", lives, hearts_flashing)
 
         "Take a nap under a tree":
             "The shade is cool and refreshing."
@@ -263,7 +310,9 @@ label scenario4:
     scene bg stream
     with fade
 
+    $ hearts_flashing = False
     show expression "heart %d" % lives at heartpos
+    $ send_to_arduino("stream", lives, hearts_flashing)
     show dogattack at doggostream
     pause 1.8
     hide dogattack
@@ -278,16 +327,28 @@ label scenario4:
             hide dogidle
             show doghurt at doggostream
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("stream", lives, hearts_flashing)
             "The kids think its fun to throw stones at the dog 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("stream", lives, hearts_flashing)
 
         "Approach the goofy looking cat":
             $ lives -= 1
             hide dogidle
             show doghurt at doggostream
             hide heart % lives
+            $ hearts_flashing = True
             show expression "heart%dflash" % lives at heartpos
+            $ send_to_arduino("stream", lives, hearts_flashing)
             "The cat gets spooked and scratches the dog 😔"
+            $ hearts_flashing = False
+            hide expression "heart%dflash" % lives
+            show expression "heart %d" % lives at heartpos
+            $ send_to_arduino("stream", lives, hearts_flashing)
 
         "Follow the sweet grandma":
             "The dog gets pampered!"
@@ -302,9 +363,12 @@ label scenario4:
 # -------------------------------
 label ending:
     scene bg train
+    $ hearts_flashing = False
+    $ send_to_arduino("ending", lives, hearts_flashing)
     "The stray’s journey ends here."
     "Many strays never make it because of the risks they face every day."
     "But you can help! Make sure you report, adopt, and care."
     "Remember: your awareness can change the life of a stray."
     $ lives = 4
+    $ send_to_arduino("start", lives, hearts_flashing)
     jump start
