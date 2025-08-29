@@ -1,150 +1,51 @@
-// Arduino sketch for paw controller with 5 buttons and 5 NeoPixel strips
-
 #include <Adafruit_NeoPixel.h>
 
-#define NUM_LEDS 8      // Number of LEDs per strip (adjust as needed)
-#define NUM_TOES 4      // Number of toe buttons/strips
-#define PALM_PIN 9      // Palm NeoPixel data pin
-#define PALM_BTN 4      // Palm button pin (space)
-#define SCENE_COLOR_COUNT 5
+#define LED_PIN    13      // GPIO pin for NeoPixel
+#define LED_COUNT  40      // Number of LEDs
 
-// Toe pins and button pins
-const int toeLedPins[NUM_TOES] = {5, 6, 7, 8};   // NeoPixel data pins for toes
-const int toeBtnPins[NUM_TOES] = {10, 11, 12, 13}; // Button pins for toes (A,B,C,D)
+const int btnPins[5] = { 26, 27, 14, 12, 25 }; 
+const char keys[5]   = { 'a', 'b', 'c', 'd', 'e' };   
 
-// NeoPixel objects
-Adafruit_NeoPixel toeStrips[NUM_TOES] = {
-  Adafruit_NeoPixel(NUM_LEDS, toeLedPins[0], NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(NUM_LEDS, toeLedPins[1], NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(NUM_LEDS, toeLedPins[2], NEO_GRB + NEO_KHZ800),
-  Adafruit_NeoPixel(NUM_LEDS, toeLedPins[3], NEO_GRB + NEO_KHZ800)
-};
-Adafruit_NeoPixel palmStrip(NUM_LEDS, PALM_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-// Scene colors for palm LED
-uint32_t sceneColors[SCENE_COLOR_COUNT] = {
-  0x00FF00, // start - green
-  0x0000FF, // road - blue
-  0xFF8000, // market - orange
-  0xFFFF00, // sunny - yellow
-  0xFF00FF  // stream/ending - magenta
-};
+unsigned long lastUpdate = 0; 
+int rainbowHue = 0;
 
-String inputString = "";
-bool stringComplete = false;
+// Non-blocking rainbow animation
+void rainbowStep() {
+  for (int i = 0; i < strip.numPixels(); i++) {
+    int pixelHue = rainbowHue + (i * 65536L / strip.numPixels());
+    strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+  }
+  strip.show();
 
-// State variables
-String scene = "start";
-int lives = 4;
-int heartsFlashing = 0;
-unsigned long lastFlash = 0;
-bool flashState = false;
+  rainbowHue += 256;     // controls speed of rainbow shift
+  if (rainbowHue >= 5 * 65536) rainbowHue = 0;
+}
 
 void setup() {
-  Serial.begin(9600);
-  inputString.reserve(50);
+  strip.begin();
+  strip.show();
+  strip.setBrightness(100);
 
-  // Init NeoPixels
-  for (int i = 0; i < NUM_TOES; i++) toeStrips[i].begin();
-  palmStrip.begin();
-
-  // Init buttons
-  for (int i = 0; i < NUM_TOES; i++) pinMode(toeBtnPins[i], INPUT_PULLUP);
-  pinMode(PALM_BTN, INPUT_PULLUP);
-
-  updateLeds();
+  Serial.begin(115200);
+  for (int i = 0; i < 5; i++) {
+    pinMode(btnPins[i], INPUT_PULLUP); // buttons to GND
+  }
 }
 
 void loop() {
-  // Handle serial input
-  if (stringComplete) {
-    parseInput(inputString);
-    inputString = "";
-    stringComplete = false;
-    updateLeds();
-  }
-
-  // Flashing logic
-  if (heartsFlashing == 1) {
-    unsigned long now = millis();
-    if (now - lastFlash > 400) { // Flash every 400ms
-      flashState = !flashState;
-      flashLeds(flashState);
-      lastFlash = now;
+  // Handle buttons
+  for (int i = 0; i < 5; i++) {
+    if (digitalRead(btnPins[i]) == LOW) {
+      Serial.println(keys[i]);   
+      delay(500); // debounce
     }
   }
 
-  // Button handling (send to Ren'Py)
-  for (int i = 0; i < NUM_TOES; i++) {
-    if (digitalRead(toeBtnPins[i]) == LOW) {
-      Serial.println((char)('a' + i));
-      delay(200); // Debounce
-    }
-  }
-  if (digitalRead(PALM_BTN) == LOW) {
-    Serial.println("space");
-    delay(200);
-  }
-}
-
-// Parse Ren'Py message: scene,lives,heartsFlashing
-void parseInput(String msg) {
-  int c1 = msg.indexOf(',');
-  int c2 = msg.indexOf(',', c1 + 1);
-  if (c1 > 0 && c2 > c1) {
-    scene = msg.substring(0, c1);
-    lives = msg.substring(c1 + 1, c2).toInt();
-    heartsFlashing = msg.substring(c2 + 1).toInt();
-  }
-}
-
-// Update LEDs for lives and scene
-void updateLeds() {
-  // Toes: show lives left (on = life, off = lost)
-  for (int i = 0; i < NUM_TOES; i++) {
-    for (int j = 0; j < NUM_LEDS; j++) {
-      if (i < lives)
-        toeStrips[i].setPixelColor(j, 0xFF0000); // Red for life
-      else
-        toeStrips[i].setPixelColor(j, 0x000000); // Off for lost
-    }
-    toeStrips[i].show();
-  }
-
-  // Palm: color by scene
-  palmStrip.fill(getSceneColor(scene), 0, NUM_LEDS);
-  palmStrip.show();
-}
-
-// Flash all LEDs (on/off)
-void flashLeds(bool on) {
-  uint32_t color = on ? 0xFFFFFF : 0x000000;
-  for (int i = 0; i < NUM_TOES; i++) {
-    toeStrips[i].fill(color, 0, NUM_LEDS);
-    toeStrips[i].show();
-  }
-  palmStrip.fill(color, 0, NUM_LEDS);
-  palmStrip.show();
-}
-
-// Map scene name to color
-uint32_t getSceneColor(String s) {
-  if (s == "start") return sceneColors[0];
-  if (s == "road") return sceneColors[1];
-  if (s == "market") return sceneColors[2];
-  if (s == "sunny") return sceneColors[3];
-  if (s == "stream" || s == "ending") return sceneColors[4];
-  return 0xFFFFFF; // Default white
-}
-
-// Serial event
-void serialEvent() {
-  while (Serial.available()) {
-    char inChar = (char)Serial.read();
-    if (inChar == '\n') {
-      stringComplete = true;
-    } else {
-      inputString += inChar;
-    }
+  // Update rainbow every 20ms (non-blocking)
+  if (millis() - lastUpdate > 20) {
+    rainbowStep();
+    lastUpdate = millis();
   }
 }
