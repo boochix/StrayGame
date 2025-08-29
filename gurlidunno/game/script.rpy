@@ -121,15 +121,20 @@ label start:
     scene bg start
     with fade
 
-    $ hearts_flashing = True
     show dogidle at doggointro
-    show heart4flash at heartpos
+
     "🐾 Welcome to Stray\’s Journey!" 
     "You will follow a stray dog through struggles it faces in its everyday life."
+
+    $ hearts_flashing = True
+    show heart4flash at heartpos
+
     "You start with 4 lives."
+
     $ hearts_flashing = False
     hide heart4flash
     show heart 4 at heartpos
+    
     "Each wrong choice costs a life. Make safe choices to help the dog survive!"
     "Press START to begin."
 
