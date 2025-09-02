@@ -4,7 +4,7 @@
 #define LED_COUNT  40      // Number of LEDs
 
 const int btnPins[5] = { 26, 27, 14, 12, 25 }; 
-const char keys[5]   = { 'a', 'b', 'c', 'd', ' ' };   
+const char keys[5]   = { 'a', 'b', 'c', 'd', '' };   
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
